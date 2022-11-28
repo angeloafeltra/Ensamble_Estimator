@@ -3,42 +3,36 @@ from os.path import exists
 import re
 import mlflow
 import pandas as pd
-import pymongo
-from DatabaseManagement import DatabaseManagement
-
-class Pipelines_Extractor:
-
-    def __init__(self):
-        self.db=DatabaseManagement('Ensamble')
+from PipelinesDAO import PipelinesDAO
+from PipelineBean import PipelineBean
 
 
-    def getPipelines(self,experiments_name):
-        #myclient=pymongo.MongoClient("mongodb://localhost:27017")
-        #mydb=myclient.get_database('Ensamble')
-        #myclient = pymongo.MongoClient("mongodb+srv://angeloafeltra:angelo99@cluster0.mkntsnm.mongodb.net/?retryWrites=true&w=majority")
-        #mydb=myclient.get_database('Ensamble')
-        for exp in experiments_name:
-            experiment=mlflow.get_experiment_by_name(exp)
-            all_run=mlflow.search_runs(experiment_ids=[experiment.experiment_id]) #Ottengo tutte le run dell'esperimento
-            if not all_run.empty:
-                if not 'Pipelines' in self.db.getListaCollezioni():
-                    #mydb.create_collection('Pipelines')
-                    self.db.createCollezione('Pipelines')
-                #collection=mydb.get_collection('Pipelines')
-                for artifact_uri,model_history,run_name in zip(all_run['artifact_uri'],all_run['tags.mlflow.log-model.history'],all_run['tags.mlflow.runName']):
-                    model_artifact=re.search('\"artifact_path\": \"([A-Za-z0-9]+)\"',model_history).group(1) #Ottengo il nome del modello usato nella run
-                    test_set_path=artifact_uri+'/'+model_artifact+' Prediction'+'/'+model_artifact+'.csv' #Path in cui e salvato il test_set del run
-                    current_dir=os.getcwd()
-                    if not exists(current_dir+'/Test_sets/{}'.format(model_artifact)):
-                        os.mkdir(current_dir+'/Test_sets/{}'.format(model_artifact))
-                    #Salvo il dataset di validation in una nuova cartella.
-                    dataset=pd.read_csv(test_set_path)
-                    test_set_path='Test_sets/{}/{}.csv'.format(model_artifact,run_name)
-                    dataset.to_csv(test_set_path)
-                    document={'Classificatore':exp,'Nome':run_name,'Prediction_Set':test_set_path}
-                    #collection.insert_one(document)
-                    self.db.insertOneIntoCollection('Pipelines',document)
+if __name__ == "__main__":
 
+    experiments_name=['Decision Tree','Random Forest','KNN','AdaBoost']
+    pipelinesDao=PipelinesDAO()
+    for exp in experiments_name:
+        experiment=mlflow.get_experiment_by_name(exp)
+        all_run=mlflow.search_runs(experiment_ids=[experiment.experiment_id]) #Ottengo tutte le run dell'esperimento
+        if not all_run.empty:
+            if not pipelinesDao.collectionExsist():
+                pipelinesDao.createCollection()
+
+            for artifact_uri,model_history,run_name in zip(all_run['artifact_uri'],all_run['tags.mlflow.log-model.history'],all_run['tags.mlflow.runName']):
+                model_artifact=re.search('\"artifact_path\": \"([A-Za-z0-9]+)\"',model_history).group(1) #Ottengo il nome del modello usato nella run
+                test_set_path=artifact_uri+'/'+model_artifact+' Prediction'+'/'+model_artifact+'.csv' #Path in cui e salvato il test_set del run
+                current_dir=os.getcwd()
+                if not exists(current_dir+'/Test_sets/{}'.format(model_artifact)):
+                    os.mkdir(current_dir+'/Test_sets/{}'.format(model_artifact))
+                #Salvo il dataset di validation in una nuova cartella.
+                dataset=pd.read_csv(test_set_path)
+                test_set_path='Test_sets/{}/{}.csv'.format(model_artifact,run_name)
+                dataset.to_csv(test_set_path)
+                pipeline=PipelineBean()
+                pipeline.setClassificatore(exp)
+                pipeline.setNome(run_name)
+                pipeline.setPredictionSet(test_set_path)
+                pipelinesDao.insertPipeline(pipeline)
 
 
 

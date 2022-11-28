@@ -4,9 +4,7 @@ from CombinazioneBean import CombinazioneBean
 class CombinazioniDAO:
 
     def __init__(self):
-        #myclient = pymongo.MongoClient("mongodb+srv://angeloafeltra:angelo99@cluster0.mkntsnm.mongodb.net/?retryWrites=true&w=majority")
-        #self.mydb=myclient.get_database('Ensamble')
-        myclient = pymongo.MongoClient("mongodb://localhost:27017")
+        myclient = pymongo.MongoClient("mongodb+srv://angeloafeltra:angelo99@cluster0.mkntsnm.mongodb.net/?retryWrites=true&w=majority")
         self.mydb=myclient.get_database('Ensamble')
         self.collectionName='Combinazioni'
 
