@@ -25,7 +25,7 @@ class Generatore_Combinazioni:
             combinazione=Combinazione()
             combinazione=combinazione.populateByDic(c)
             combinazione.setValutata('inValutazione')
-            collection.update_one({'_id':self.id},{'$set':{'Valutata':self.valutata}})
+            collection.update_one({'_id':combinazione.getId()},{'$set':{'Valutata':combinazione.isValutata()}})
             return combinazione
         else:
             return None
