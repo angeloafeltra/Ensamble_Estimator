@@ -1,125 +1,80 @@
 import copy
-import os
-from os.path import exists
-import pymongo
-from Pipelines_Extractor import Pipelines_Extractor
-import pandas as pd
 import itertools
-from Combinazione import Combinazione
+from PipelinesDAO import PipelinesDAO
+from CombinazioniDAO import CombinazioniDAO
+from CombinazioneBean import CombinazioneBean
 from tqdm import tqdm
-from Pipeline import Pipeline
-
-class Generatore_Combinazioni:
 
 
-    def __init__(self,experiments):
-        self.list_experiments=experiments
+def combinazioni1(daCombinare):
+    combinazioni=[]
+    for element in itertools.product(*daCombinare):
+        combinazione = CombinazioneBean()
+        combinazione.addPipeline(element[0])
+        combinazione.addPipeline(element[1])
+        combinazione.addPipeline(element[2])
+        combinazione.addPipeline(element[3])
+        combinazioni.append(combinazione)
+    return combinazioni
 
-
-    def getNextCombinazioniNonValutata(self):
-        myclient = pymongo.MongoClient("mongodb+srv://angeloafeltra:angelo99@cluster0.mkntsnm.mongodb.net/?retryWrites=true&w=majority")
-        mydb=myclient.get_database('Ensamble')
-        collection=mydb.get_collection('Combinazioni')
-        c=collection.find_one({'Valutata': 'false'})
-        if not c is None:
-            collection.update_one({'_id':c['_id']},{'$set':{'Valutata':'inValutazione'}})
-            combinazione=Combinazione()
-            combinazione=combinazione.populateByDic(c)
-            return combinazione
-        else:
-            return None
-
-
-
-    def generaCombinazioni(self):
-        myclient = pymongo.MongoClient("mongodb+srv://angeloafeltra:angelo99@cluster0.mkntsnm.mongodb.net/?retryWrites=true&w=majority")
-        mydb=myclient.get_database('Ensamble')
-        pipelinesForExperiments=[]
-        collection=mydb.get_collection('Pipelines')
-        for experiment in self.list_experiments:
-            lista_id=collection.find({'Classificatore':experiment}).distinct('_id')
-            pipelinesForExperiments.append(lista_id)
-
-
-        print("Genero le Combinazioni")
-        #Inizio la generazione delle combinazioni
-        #Combinazioni1
-        combinazioni=self.__combinazioni1(pipelinesForExperiments)
-        #Combinazione 2
-        combinazioni+=self.__combinazioni2(pipelinesForExperiments)
-        #Combinazioni 3
-        combinazioni+=self.__combinazioni3(pipelinesForExperiments)
-
-        print("Salvo le combinazioni")
-        #Salvo le combinazioni nel db
-        if 'Combinazioni' in mydb.list_collection_names():
-            mydb.drop_collection('Combinazioni')
-        mydb.create_collection('Combinazioni')
-        collection=mydb.get_collection('Combinazioni')
-
-
-        for combinazione in combinazioni:
-            pipeline_combinate=combinazione.getPipelineCombinate()
-            document={}
-            for pipeline,i in zip(pipeline_combinate,range(len(pipeline_combinate))):
-                document['Pipeline {}'.format(i+1)]=pipeline
-            document['Precision']=None
-            document['Recall']=None
-            document['F1']=None
-            document['Valutata']='false'
-            collection.insert_one(document)
-
-
-    def deleteSetCombinazioni(self):
-        myclient = pymongo.MongoClient("mongodb+srv://angeloafeltra:angelo99@cluster0.mkntsnm.mongodb.net/?retryWrites=true&w=majority")
-        mydb=myclient.get_database('Ensamble')
-        if 'Combinazioni' in mydb.list_collection_names():
-            mydb.drop_collection('Combinazioni')
-
-    def getBestCombinazione(self,criterio):
-        myclient = pymongo.MongoClient("mongodb+srv://angeloafeltra:angelo99@cluster0.mkntsnm.mongodb.net/?retryWrites=true&w=majority")
-        mydb=myclient.get_database('Ensamble')
-        collection=mydb.get_collection('Combinazioni')
-        bests=collection.find().sort(criterio,-1).limit(1)
-        return Combinazione().populateByDic(bests[0])
-
-
-    def __combinazioni1(self,daCombinare):
-        combinazioni=[]
-        for element in itertools.product(*daCombinare):
-            combinazione=Combinazione()
-            combinazione.addPipeline2(element[0])
-            combinazione.addPipeline2(element[1])
-            combinazione.addPipeline2(element[2])
-            combinazione.addPipeline2(element[3])
+def combinazioni2(daCombinare,numEsperimenti):
+    combinazioni=[]
+    for i in range(0,numEsperimenti):
+        copia=copy.copy(daCombinare)
+        copia.pop(i)
+        for element in itertools.product(*copia):
+            combinazione=CombinazioneBean()
+            combinazione.addPipeline(element[0])
+            combinazione.addPipeline(element[1])
+            combinazione.addPipeline(element[2])
             combinazioni.append(combinazione)
-        return combinazioni
+    return combinazioni
 
-    def __combinazioni2(self,daCombinare):
-        combinazioni=[]
-        for i in range(0,len(self.list_experiments)):
-            copia=copy.copy(daCombinare)
-            copia.pop(i)
-            for element in itertools.product(*copia):
-                combinazione=Combinazione()
-                combinazione.addPipeline2(element[0])
-                combinazione.addPipeline2(element[1])
-                combinazione.addPipeline2(element[2])
+def combinazioni3(daCombinare,numEsperimenti):
+    i=0
+    combinazioni=[]
+    while(i<numEsperimenti-1):
+        j=i+1
+        while(j<numEsperimenti):
+            for element in itertools.product(*[daCombinare[i],daCombinare[j]]):
+                combinazione=CombinazioneBean()
+                combinazione.addPipeline(element[0])
+                combinazione.addPipeline(element[1])
                 combinazioni.append(combinazione)
+            j+=1
+        i+=1
+    return combinazioni
 
-        return combinazioni
 
-    def __combinazioni3(self,daCombinare):
-        i=0
-        combinazioni=[]
-        while(i<len(self.list_experiments)-1):
-            j=i+1
-            while(j<len(self.list_experiments)):
-                for element in itertools.product(*[daCombinare[i],daCombinare[j]]):
-                    combinazione=Combinazione()
-                    combinazione.addPipeline2(element[0])
-                    combinazione.addPipeline2(element[1])
-                    combinazioni.append(combinazione)
-                j+=1
-            i+=1
-        return combinazioni
+if __name__ == "__main__":
+
+    experiments_name=['Decision Tree','Random Forest','KNN','AdaBoost']
+    pipelinesDao=PipelinesDAO()
+    combinazioniDao=CombinazioniDAO()
+
+    pipelinesForExperiments=[]
+    for experiment in experiments_name:
+        lista_id=pipelinesDao.getDisinctPipIdByClassificatore(experiment)
+        pipelinesForExperiments.append(lista_id)
+
+    print("Genero le Combinazioni")
+    combinazioni=[]
+    #Combinazioni1
+    combinazioni=combinazioni1(pipelinesForExperiments)
+    #Combinazione 2
+    combinazioni+=combinazioni2(pipelinesForExperiments,len(experiments_name))
+    #Combinazioni 3
+    combinazioni+=combinazioni3(pipelinesForExperiments,len(experiments_name))
+
+
+    print("Salvo le combinazioni")
+    if combinazioniDao.collectionExsist():
+        combinazioniDao.dropCollection()
+    combinazioniDao.createCollection()
+    progressBar=tqdm(total=len(combinazioni))
+    for combinazione in combinazioni:
+        combinazioniDao.insertCombinazione(combinazione)
+        progressBar.update(1)
+
+
+
