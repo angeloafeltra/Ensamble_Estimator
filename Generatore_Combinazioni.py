@@ -22,10 +22,9 @@ class Generatore_Combinazioni:
         collection=mydb.get_collection('Combinazioni')
         c=collection.find_one({'Valutata': 'false'})
         if not c is None:
+            collection.update_one({'_id':c['_id']},{'$set':{'Valutata':'inValutazione'}})
             combinazione=Combinazione()
             combinazione=combinazione.populateByDic(c)
-            combinazione.setValutata('inValutazione')
-            collection.update_one({'_id':combinazione.getId()},{'$set':{'Valutata':combinazione.isValutata()}})
             return combinazione
         else:
             return None
