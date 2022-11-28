@@ -15,7 +15,7 @@ class Combinazione:
         self.precision=None
         self.recall=None
         self.f1=None
-        self.valutata=False
+        self.valutata='false'
 
     def getId(self): return self.id
     def getPrecision(self): return self.precision
@@ -74,7 +74,7 @@ class Combinazione:
         self.precision=precision_score(y_true=tureLable, y_pred=dataframe_predic['moda'])
         self.recall=recall_score(y_true=tureLable, y_pred=dataframe_predic['moda'])
         self.f1=f1_score(y_true=tureLable, y_pred=dataframe_predic['moda'])
-        self.valutata=True
+        self.valutata='true'
 
         print("Aggiorno la combinazione")
         myclient = pymongo.MongoClient("mongodb+srv://angeloafeltra:angelo99@cluster0.mkntsnm.mongodb.net/?retryWrites=true&w=majority")

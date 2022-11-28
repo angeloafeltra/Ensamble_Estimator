@@ -20,10 +20,12 @@ class Generatore_Combinazioni:
         myclient = pymongo.MongoClient("mongodb+srv://angeloafeltra:angelo99@cluster0.mkntsnm.mongodb.net/?retryWrites=true&w=majority")
         mydb=myclient.get_database('Ensamble')
         collection=mydb.get_collection('Combinazioni')
-        c=collection.find_one({'Valutata': False})
+        c=collection.find_one({'Valutata': 'false'})
         if not c is None:
             combinazione=Combinazione()
             combinazione=combinazione.populateByDic(c)
+            combinazione.setValutata('inValutazione')
+            collection.update_one({'_id':self.id},{'$set':{'Valutata':self.valutata}})
             return combinazione
         else:
             return None
@@ -65,7 +67,7 @@ class Generatore_Combinazioni:
             document['Precision']=None
             document['Recall']=None
             document['F1']=None
-            document['Valutata']=False
+            document['Valutata']='false'
             collection.insert_one(document)
 
 
