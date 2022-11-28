@@ -5,7 +5,7 @@ import pymongo
 from scipy import stats as st
 from sklearn.metrics import precision_score, recall_score, f1_score
 from Pipeline import Pipeline
-
+from DatabaseManagement import DatabaseManagement
 
 class Combinazione:
 
@@ -16,6 +16,7 @@ class Combinazione:
         self.recall=None
         self.f1=None
         self.valutata='false'
+        self.db=DatabaseManagement('Ensamble')
 
     def getId(self): return self.id
     def getPrecision(self): return self.precision
@@ -77,13 +78,15 @@ class Combinazione:
         self.valutata='true'
 
         print("Aggiorno la combinazione")
-        myclient = pymongo.MongoClient("mongodb+srv://angeloafeltra:angelo99@cluster0.mkntsnm.mongodb.net/?retryWrites=true&w=majority")
-        mydb=myclient.get_database('Ensamble')
-        collection=mydb.get_collection('Combinazioni')
-        collection.update_one({'_id':self.id},{'$set':{'Precision':self.precision,
-                                               'Recall':self.recall,
-                                               'F1':self.f1,
-                                               'Valutata':self.valutata}})
+        #myclient = pymongo.MongoClient("mongodb+srv://angeloafeltra:angelo99@cluster0.mkntsnm.mongodb.net/?retryWrites=true&w=majority")
+        #mydb=myclient.get_database('Ensamble')
+        #collection=mydb.get_collection('Combinazioni')
+        #collection.update_one({'_id':self.id},{'$set':{'Precision':self.precision,
+                                               #'Recall':self.recall,
+                                               #'F1':self.f1,
+                                               #'Valutata':self.valutata}})
+
+        self.db.updateDocIntoCollection('Combinazioni',self.id,{'Precision':self.precision,'Recall':self.recall,'F1':self.f1,'Valutata':self.valutata})
 
 
 
@@ -95,6 +98,6 @@ class Combinazione:
        return 'ID:{},\nPipeline Combinate:\n{},\nPrecision:{},\nRecall:{},\nF1:{}'.format(self.getId(),
                                                                                               strPipeline,
                                                                                               self.getPrecision(),
-                                                                                             self.getRecall(),
+                                                                                              self.getRecall(),
                                                                                              self.getF1())
 

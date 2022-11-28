@@ -1,17 +1,19 @@
 import os
 import pandas as pd
 import pymongo
-
+from DatabaseManagement import DatabaseManagement
 
 class Pipeline:
 
 
     def __init__(self,id):
         self.id=id
-        myclient = pymongo.MongoClient("mongodb+srv://angeloafeltra:angelo99@cluster0.mkntsnm.mongodb.net/?retryWrites=true&w=majority")
-        mydb=myclient.get_database('Ensamble')
-        collection=mydb.get_collection('Pipelines')
-        result=collection.find_one({'_id':id})
+        self.db=DatabaseManagement('Ensamble')
+        #myclient = pymongo.MongoClient("mongodb+srv://angeloafeltra:angelo99@cluster0.mkntsnm.mongodb.net/?retryWrites=true&w=majority")
+        #mydb=myclient.get_database('Ensamble')
+        #collection=mydb.get_collection('Pipelines')
+        #result=collection.find_one({'_id':id})
+        result=self.db.findOneDocument('Pipelines',{'_id':id})
         self.classificatore=result['Classificatore']
         self.nome=result['Nome']
         self.prediction_set=result['Prediction_Set']
