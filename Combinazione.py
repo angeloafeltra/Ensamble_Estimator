@@ -77,7 +77,7 @@ class Combinazione:
         self.valutata=True
 
         print("Aggiorno la combinazione")
-        myclient=pymongo.MongoClient("mongodb://localhost:27017")
+        myclient = pymongo.MongoClient("mongodb+srv://angeloafeltra:angelo99@cluster0.mkntsnm.mongodb.net/?retryWrites=true&w=majority")
         mydb=myclient.get_database('Ensamble')
         collection=mydb.get_collection('Combinazioni')
         collection.update_one({'_id':self.id},{'$set':{'Precision':self.precision,

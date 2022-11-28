@@ -14,7 +14,7 @@ if __name__ == "__main__":
     '''
 
     generatore=Generatore_Combinazioni(experiments_name)
-    generatore.generaCombinazioni()
+    #generatore.generaCombinazioni()
 
 
 
