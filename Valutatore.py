@@ -1,3 +1,5 @@
+import warnings
+warnings.simplefilter(action='ignore', category=FutureWarning)
 import pandas as pd
 from sklearn.metrics import precision_score, recall_score, f1_score
 from CombinazioniDAO import CombinazioniDAO
@@ -6,9 +8,7 @@ from CombinazioneBean import CombinazioneBean
 from PipelineBean import PipelineBean
 from scipy import stats as st
 
-
 if __name__ == "__main__":
-
     combinazioneDao=CombinazioniDAO()
     pipelineDao=PipelinesDAO()
     combinazione=combinazioneDao.getCombinazioneDaValutare()
